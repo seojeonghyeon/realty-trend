@@ -10,7 +10,7 @@
 <tr><th>단지</th><th>동/층</th><th>타입</th><th>향</th><th class="n">가격</th><th>수리</th><th class="n">인테리어</th><th>확인일</th><th>주의</th><th>설명</th></tr>
 {% for li, est in rows %}
 <tr>
-  <td><a href="/complexes/{{li.complex_id}}">{{li.complex.name}}</a>{% if li.first_seen==date %} <span class="chip">NEW</span>{% endif %}</td>
+  <td><a href="{{ P }}/complexes/{{li.complex_id}}">{{li.complex.name}}</a>{% if li.first_seen==date %} <span class="chip">NEW</span>{% endif %}</td>
   <td>{{li.building}} {{li.floor_text}}</td><td>{{li.area_group}}㎡ {{li.area_name}}</td><td>{{li.direction}}</td>
   <td class="n"><a href="{{article_url(li.article_no)}}" target="_blank" rel="noopener"><b>{{li.price|eok}}</b></a>{% if li.prev_price %}<br><span class="{{'down' if li.price<li.prev_price else 'up'}}">{{li.prev_price|eok}}→</span>{% endif %}</td>
   <td>{{li.repair_grade or '모름'}}</td><td class="n">{{est.total|num}}</td><td>{{li.confirmed_at or ''}}</td>

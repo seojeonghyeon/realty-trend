@@ -1,5 +1,9 @@
 # 운영 배포용 (GitHub Actions → NAS). 로컬/단독 실행은 저장소 루트의 docker-compose.yml 사용.
 # DB 는 NAS 의 MariaDB 패키지를 host.docker.internal 로 사용 (DATABASE_URL secret).
+# 프로젝트 이름 고정: 파일이 .../deploy/ 에 놓여 기본 이름이 'deploy' 가 되면 같은 이름을 쓰는
+# time-page 프로젝트의 blue/green 서비스와 겹쳐 그 컨테이너를 재생성할 수 있다.
+name: realty
+
 x-app: &app
   image: ${DOCKER_USERNAME}/realty-trend:${APP_VERSION:-latest}
   restart: unless-stopped   # 직접 stop 한 이전 색은 재부팅 후에도 꺼진 채 유지

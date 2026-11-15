@@ -16,7 +16,7 @@ pts.forEach(p=>{
   const color=p.excluded?'#999':(p.in_budget?'#d93025':'#2457d6');
   const m=L.circleMarker([p.lat,p.lng],{radius:p.priority?10:6,color,fillColor:color,fillOpacity:.7}).addTo(map);
   const price=p.price?(p.price/10000).toFixed(2)+'억':'-';
-  m.bindPopup(`<b><a href="/complexes/${p.id}">${esc(p.name)}</a></b><br>${esc(p.region)} · ${p.year||'?'}년 · ${p.hh||'?'}세대<br>${p.area||''}㎡ ${price}<br>🚇 ${esc(p.station)} ${p.station_m&&p.station_m<9999?p.station_m+'m':''}`);
+  m.bindPopup(`<b><a href="{{ P }}/complexes/${p.id}">${esc(p.name)}</a></b><br>${esc(p.region)} · ${p.year||'?'}년 · ${p.hh||'?'}세대<br>${p.area||''}㎡ ${price}<br>🚇 ${esc(p.station)} ${p.station_m&&p.station_m<9999?p.station_m+'m':''}`);
   if(p.priority) m.bindTooltip(String(p.priority),{permanent:true,direction:'center',className:''});
   b.push([p.lat,p.lng]);
 });

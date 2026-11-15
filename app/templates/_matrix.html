@@ -8,8 +8,8 @@
     {% for e in m.get(row,col) %}
       <span class="entry {{'out' if e.excluded else ''}} {{'keep' if e.keep else ''}}" title="{{e.exclude_reason}}">
         {% if e.priority %}<span class="prio">{{e.priority}}</span>{% endif %}
-        <a href="/complexes/{{e.complex_id}}">{{e.label}}</a>
-        {% if quick %}<form method="post" action="/complexes/{{e.complex_id}}/quick" style="display:inline">
+        <a href="{{ P }}/complexes/{{e.complex_id}}">{{e.label}}</a>
+        {% if quick %}<form method="post" action="{{ P }}/complexes/{{e.complex_id}}/quick" style="display:inline">
           <input type="hidden" name="action" value="priority">
           <input name="value" value="{{e.priority or ''}}" size="2" style="width:34px;padding:0 3px;font-size:11px" title="우선순위 번호">
         </form>{% endif %}

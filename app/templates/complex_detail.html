@@ -18,7 +18,7 @@
   </div>
   <div class="card" style="grid-column:span 2">
     <h2>정성 평가 {% if ev %}<span class="muted small">출처: {{ {'auto':'자동(객관지표)','claude':'Claude','user':'내 평가'}[ev.source] }}</span>{% endif %}</h2>
-    <form method="post" action="/complexes/{{c.id}}/eval">
+    <form method="post" action="{{ P }}/complexes/{{c.id}}/eval">
       <div class="row">
         {% for k,l in [('transport','교통'),('homogeneity','균질성'),('school','학군'),('households','세대수')] %}
         <label>{{l}} <select name="{{k}}">{% for g in EVAL_GRADES %}<option value="{{g}}" {{'selected' if ev and ev[k]==g}}>{{g or '-'}}</option>{% endfor %}</select></label>
@@ -54,7 +54,7 @@
   <td>{{'매매' if li.trade_type=='sale' else '전세'}}</td>
   <td>{{li.building}} {{li.floor_text}}</td><td>{{li.area_name}} ({{li.area_group}}㎡)</td><td>{{li.direction}}</td>
   <td class="n"><b>{{li.price|eok}}</b>{% if li.prev_price %}<br><span class="small {{'down' if li.price<li.prev_price else 'up'}}">{{li.prev_price|eok}}→</span>{% endif %}</td>
-  <td>{% if li.trade_type=='sale' %}<form method="post" action="/listings/{{li.id}}/repair"><select name="grade" onchange="this.form.submit()">
+  <td>{% if li.trade_type=='sale' %}<form method="post" action="{{ P }}/listings/{{li.id}}/repair"><select name="grade" onchange="this.form.submit()">
       <option value="">모름</option>{% for g in GRADES %}<option {{'selected' if li.repair_grade==g}}>{{g}}</option>{% endfor %}</select></form>
       <span class="muted">{{li.repair_source}}</span>{% endif %}</td>
   <td class="n">{{est.total|num if est else ''}}</td>
@@ -63,7 +63,7 @@
   <td>{% for f in li.flags %}<span class="chip warn">{{f}}</span>{% endfor %}{% if li.dup_count>1 %}<span class="chip">중복 {{li.dup_count}}</span>{% endif %}{% if li.realtor_count>1 %}<span class="chip">중개사 {{li.realtor_count}}</span>{% endif %}</td>
   <td style="max-width:320px">{{li.description}}<br><span class="muted">{{li.realtor}}</span></td>
   <td><a href="{{article_url(li.article_no)}}" target="_blank" rel="noopener">보기</a>
-    <form method="post" action="/visits"><input type="hidden" name="complex_id" value="{{c.id}}"><input type="hidden" name="listing_id" value="{{li.id}}"><button class="mini ghost">임장 추가</button></form></td>
+    <form method="post" action="{{ P }}/visits"><input type="hidden" name="complex_id" value="{{c.id}}"><input type="hidden" name="listing_id" value="{{li.id}}"><button class="mini ghost">임장 추가</button></form></td>
 </tr>
 {% else %}<tr><td colspan="12" class="muted">활성 매물 없음</td></tr>{% endfor %}
 </table></div>
@@ -75,7 +75,7 @@
 </table></div>
 <div class="card"><h2>임장 기록</h2>
 {% for v in visits %}<p>{{v.status}} · {{v.realtor_name}} {{v.realtor_phone}} · 전화 {{v.call_by or '-'}} · 방문 {{v.visit_at or '-'}}<br><span class="small muted">{{v.memo}}</span></p>{% else %}<p class="muted">없음</p>{% endfor %}
-<form method="post" action="/visits" class="row small"><input type="hidden" name="complex_id" value="{{c.id}}">
+<form method="post" action="{{ P }}/visits" class="row small"><input type="hidden" name="complex_id" value="{{c.id}}">
   <input name="realtor_name" placeholder="중개사"><input name="realtor_phone" placeholder="전화">
   <input type="datetime-local" name="visit_at" title="방문 일시"><button class="mini">추가</button></form>
 <p class="small muted">방문일을 넣으면 이틀 전(토요일 방문 → 목요일)에 전화 알림이 갑니다.</p>
@@ -86,7 +86,7 @@
 let chart;
 async function draw(){
   const area=document.getElementById('area').value||0;
-  const d=await (await fetch(`/complexes/{{c.id}}/series.json?area=${area}`)).json();
+  const d=await (await fetch(`{{ P }}/complexes/{{c.id}}/series.json?area=${area}`)).json();
   const toEok=v=>v==null?null:v/10000;
   const ds=[
     {type:'line',label:'매매 호가 최저',data:d.snapshots.map(s=>({x:s.date,y:toEok(s.ask_min)})),borderColor:'#d93025',pointRadius:0,spanGaps:true},

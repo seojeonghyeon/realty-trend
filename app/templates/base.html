@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{% block title %}부동산 동향{% endblock %}</title>
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="{{ P }}/static/style.css">
 <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
@@ -14,9 +14,9 @@
 <header><nav>
   <span class="brand">🏠 부동산 동향</span>
   {% for href,label in [("/","대시보드"),("/regions","관심 지역"),("/matrix","우선순위"),("/listings","매물"),("/map","지도"),("/visits","임장"),("/news","뉴스"),("/settings","설정"),("/jobs","수집")] %}
-  <a href="{{href}}" class="{{'on' if (path==href or (href!='/' and path.startswith(href))) else ''}}">{{label}}</a>
+  <a href="{{ P }}{{href}}" class="{{'on' if (path==href or (href!='/' and path.startswith(href))) else ''}}">{{label}}</a>
   {% endfor %}
-  <form method="post" action="/logout"><button class="ghost mini">로그아웃</button></form>
+  <form method="post" action="{{ P }}/logout"><button class="ghost mini">로그아웃</button></form>
 </nav></header>
 {% endif %}
 <main>{% block body %}{% endblock %}</main>

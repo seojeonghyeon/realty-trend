@@ -4,12 +4,12 @@
 {% for v in visits %}
 <div class="card">
   <div class="row" style="justify-content:space-between">
-    <h2><a href="/complexes/{{v.complex_id}}">{{v.complex.name}}</a> {% if v.listing %}<span class="muted small">{{v.listing.building}} {{v.listing.floor_text}} {{v.listing.price|eok}}</span>{% endif %}</h2>
+    <h2><a href="{{ P }}/complexes/{{v.complex_id}}">{{v.complex.name}}</a> {% if v.listing %}<span class="muted small">{{v.listing.building}} {{v.listing.floor_text}} {{v.listing.price|eok}}</span>{% endif %}</h2>
     <span class="chip">{{ {'todo':'예정','called':'통화함','visited':'임장 완료','drop':'제외'}[v.status] }}</span>
   </div>
   <p>📞 전화할 날 <b>{{v.call_by or '-'}}</b> · 방문 {{v.visit_at or '-'}} · {{v.realtor_name}} {{v.realtor_phone}}</p>
   <details><summary class="small">통화 스크립트</summary><p class="small" style="font-style:italic">“{{script(v.listing, v.complex, v.visit_at)}}”</p></details>
-  <form method="post" action="/visits/{{v.id}}/save">
+  <form method="post" action="{{ P }}/visits/{{v.id}}/save">
     <div class="row small">
       <select name="status">{% for s,l in [('todo','예정'),('called','통화함'),('visited','임장 완료'),('drop','제외')] %}<option value="{{s}}" {{'selected' if v.status==s}}>{{l}}</option>{% endfor %}</select>
       <input name="realtor_phone" value="{{v.realtor_phone}}" placeholder="전화">

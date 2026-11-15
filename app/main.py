@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
@@ -51,6 +51,8 @@ app.add_middleware(
     https_only=settings.cookie_secure,
     same_site="lax",
     max_age=60 * 60 * 24 * 30,
+    path=settings.root_path or "/",
+    session_cookie="realty_session",  # 같은 도메인의 다른 서비스(time-page)와 쿠키 분리
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(api_routine.router)
@@ -59,7 +61,7 @@ app.include_router(pages.router)
 
 @app.exception_handler(LoginRequired)
 async def _login_redirect(request: Request, exc: LoginRequired):
-    return RedirectResponse(f"/login?next={request.url.path}", status_code=303)
+    return RedirectResponse(f"{settings.root_path}/login?next={quote(request.url.path)}", status_code=303)
 
 
 @app.get("/healthz", include_in_schema=False)

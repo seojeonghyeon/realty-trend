@@ -2,7 +2,7 @@
 # blue/green 무중단 배포. 현재 연결된 색은 nginx 의 active.conf 링크로 판별한다.
 set -euo pipefail
 cd "$(dirname "$0")"
-COMPOSE="docker compose -f ./docker-compose.yml --env-file ./.env"
+COMPOSE="docker compose -p realty -f ./docker-compose.yml --env-file ./.env"
 NGINX=realty-nginx
 
 # 1. 현재 활성 색 확인 → 반대 색에 배포

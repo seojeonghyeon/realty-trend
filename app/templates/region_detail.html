@@ -6,7 +6,7 @@
     {% if land_permit %}<span class="chip warn">토지거래허가구역{% if mode=='invest' %} — 실거주 의무, 갭투자 불가{% endif %}</span>{% endif %}
     <span class="chip">평단가 {{(pyeong_price or 0)|num}}만</span>
     <span class="chip">예산 {{br.price_lo|eok}}~{{br.price_hi|eok}}</span>
-    <a class="btn" href="/regions/{{region.id}}/export.csv">CSV</a>
+    <a class="btn" href="{{ P }}/regions/{{region.id}}/export.csv">CSV</a>
   </div>
 </div>
 <div class="tabs row card" style="padding:6px">
@@ -30,7 +30,7 @@
 <th class="n">전고점</th><th class="n">매매(호가)</th><th class="n">전일비</th><th class="n">최근실거래</th><th class="n">전세가</th><th class="n">투자금</th><th class="n">전세가율</th><th class="n">전고대비</th><th class="n">평단가</th><th class="n">매물</th><th>평가</th></tr>
 {% for r in rows %}{% set ev = evals.get(r.complex_id) %}
 <tr style="{{'background:var(--budget)' if br.contains(r.price) else ''}}{{';opacity:.5' if ev and ev.excluded else ''}}">
-  <td>{{r.dong}}</td><td><a href="/complexes/{{r.complex_id}}">{{r.name}}</a></td>
+  <td>{{r.dong}}</td><td><a href="{{ P }}/complexes/{{r.complex_id}}">{{r.name}}</a></td>
   <td class="n">{{r.built_year or '-'}}</td><td class="n">{{r.households|num}}</td><td class="n">{{'%.1f'|format(r.supply_m2) if r.supply_m2 else '-'}}</td><td class="n">{{'%.2f'|format(r.exclusive_m2)}}</td>
   <td>{{r.area_name}}</td><td class="n">{{r.type_households|num}}</td><td class="n">{{r.rooms or '-'}}/{{r.baths or '-'}}</td><td>{{r.entrance}}</td>
   <td class="n" title="{{r.peak_date or ''}}">{{r.peak|num}}</td><td class="n"><b>{{r.ask_min|num}}</b></td>

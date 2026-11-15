@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.config import get_settings
 from app.auth import check_credentials, client_ip, login_blocked, require_login
 from app.db import get_db
 from app.models import (
@@ -61,6 +62,18 @@ def all_in_cost(price: int, exclusive_m2: float, p, interior_total: int = 0) -> 
 
 templates.env.globals["all_in_cost"] = all_in_cost
 
+P = get_settings().root_path
+templates.env.globals["P"] = P  # 템플릿의 내부 링크는 모두 {{ P }}/... 형태
+
+
+def url(path: str) -> str:
+    """앱 내부 경로 → 프록시 prefix 를 붙인 브라우저용 경로."""
+    return P + path
+
+
+def safe_next(next: str) -> str:
+    return next if next.startswith("/") and not next.startswith("//") and "\\" not in next else "/"
+
 EVAL_GRADES = ["", "Good", "Soso", "Bad"]
 CHECKLIST = ["샷시(내부/외부)", "확장 여부", "보일러", "누수 자국", "타일 깨짐", "곰팡이(북측 외벽)", "베란다 창고", "화장실", "싱크대", "도배/장판"]
 
@@ -72,7 +85,7 @@ def render(request: Request, name: str, **ctx) -> HTMLResponse:
 
 
 def back(request: Request, default: str = "/") -> RedirectResponse:
-    ref = request.headers.get("referer") or default
+    ref = request.headers.get("referer") or url(default)
     return RedirectResponse(ref, status_code=303)
 
 
@@ -90,13 +103,13 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
     if not check_credentials(ip, username, password):
         return render(request, "login.html", next=next, error="아이디 또는 비밀번호가 틀렸습니다.")
     request.session["user"] = username
-    return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/", status_code=303)
+    return RedirectResponse(url(safe_next(next)), status_code=303)
 
 
 @router.post("/logout")
 def logout(request: Request):
     request.session.clear()
-    return RedirectResponse("/login", status_code=303)
+    return RedirectResponse(url("/login"), status_code=303)
 
 
 # ---------------------------------------------------------------- 대시보드
@@ -193,7 +206,7 @@ def region_add(request: Request, code: str = Form(...), group_label: str = Form(
         name = ld.name.replace("특별시", "").replace("광역시", "").replace("특별자치시", "").replace("특별자치도", "")
         db.add(WatchRegion(level=ld.level, code=code, display_name=" ".join(name.split()[1:]) or ld.name, group_label=group_label.strip()))
         db.commit()
-    return RedirectResponse("/regions", status_code=303)
+    return RedirectResponse(url("/regions"), status_code=303)
 
 
 @router.post("/regions/{rid}/update")
@@ -202,7 +215,7 @@ def region_update(rid: int, request: Request, group_label: str = Form(""), activ
     r.group_label = group_label.strip()
     r.active = active == "on"
     db.commit()
-    return RedirectResponse("/regions", status_code=303)
+    return RedirectResponse(url("/regions"), status_code=303)
 
 
 @router.post("/regions/{rid}/delete")
@@ -210,7 +223,7 @@ def region_delete(rid: int, db: Session = Depends(get_db), _=Depends(require_log
     r = db.get(WatchRegion, rid) or _404()
     db.delete(r)
     db.commit()
-    return RedirectResponse("/regions", status_code=303)
+    return RedirectResponse(url("/regions"), status_code=303)
 
 
 def _404():
@@ -570,7 +583,7 @@ async def settings_save(request: Request, db: Session = Depends(get_db), _=Depen
     except json.JSONDecodeError:
         pass
     db.commit()
-    return RedirectResponse("/settings", status_code=303)
+    return RedirectResponse(url("/settings"), status_code=303)
 
 
 # ---------------------------------------------------------------- 운영: 수집 기록, 수동 매칭

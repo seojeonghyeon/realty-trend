@@ -10,7 +10,7 @@
     <p class="muted small">현금 {{profile.cash|eok}} + 대출 {{profile.loan|eok}} = {{br.total|eok}} (±{{profile.tolerance|eok}})<br>
     상단 기준 부대비용 {{br.costs_at_hi.total|int|num}}만원 (취득세 {{br.costs_at_hi.acquisition_tax|int|num}} · 교육세 {{br.costs_at_hi.education_tax|int|num}} · 중개 {{br.costs_at_hi.brokerage|int|num}} · 기타 {{br.costs_at_hi.extra|int|num}})</p>
     {% if loan %}<p class="small">추정 대출 한도 <b>{{loan.limit|eok}}</b> ({{loan.binding}} 기준){% if loan.limit < profile.loan %} <span class="Bad">입력한 대출보다 적음</span>{% endif %}</p>{% endif %}
-    <a class="small" href="/settings">예산 수정 →</a>
+    <a class="small" href="{{ P }}/settings">예산 수정 →</a>
   </div>
   <div class="card" style="grid-column:span 2">
     <h2>오늘의 요약 {% if summary %}<span class="muted small">{{summary.date}}</span>{% endif %}</h2>
@@ -22,25 +22,25 @@
 <div class="grid">
 {% for c in cards %}
   <div class="card">
-    <div class="row" style="justify-content:space-between"><a href="/regions/{{c.region.id}}"><b>{{c.region.label}}</b></a><span class="muted small">{{c.region.display_name}}</span></div>
+    <div class="row" style="justify-content:space-between"><a href="{{ P }}/regions/{{c.region.id}}"><b>{{c.region.label}}</b></a><span class="muted small">{{c.region.display_name}}</span></div>
     <p>평단가 <b>{{(c.pyeong_price or 0)|num}}만</b> · 단지 {{c.complexes}} · 예산 내 단지 <b>{{c.in_budget}}</b></p>
     <p>신규 매물 <b>{{c.new}}</b> · 호가 인하 평형 <b class="down">{{c.drops}}</b></p>
     {% if c.analysis %}<div class="md small" data-md="{{c.analysis.markdown[:600]}}"></div>{% endif %}
   </div>
 {% else %}
-  <div class="card">관심 지역이 없습니다. <a href="/regions">지역 추가 →</a></div>
+  <div class="card">관심 지역이 없습니다. <a href="{{ P }}/regions">지역 추가 →</a></div>
 {% endfor %}
 </div>
 
 <div class="grid">
   <div class="card" style="grid-column:span 2">
-    <h2>금융·부동산 뉴스 <a class="small" href="/news">전체 →</a></h2>
+    <h2>금융·부동산 뉴스 <a class="small" href="{{ P }}/news">전체 →</a></h2>
     {% for n in news %}<p><span class="chip">{{n.impact}}</span> <span class="{{'Good' if n.sentiment=='호재' else ('Bad' if n.sentiment=='악재' else 'muted')}} small">{{n.sentiment}}</span> <a href="{{n.url}}" target="_blank" rel="noopener">{{n.title}}</a><br><span class="small muted">{{n.summary[:160]}}</span></p>{% else %}<p class="muted">뉴스 없음</p>{% endfor %}
   </div>
   <div class="card">
     <h2>📞 전화/임장 예정</h2>
-    {% for v in calls %}<p>{{v.call_by}} <a href="/complexes/{{v.complex_id}}">{{v.complex.name}}</a> {{v.realtor_name}}</p>{% else %}<p class="muted">없음</p>{% endfor %}
-    <a class="small" href="/visits">임장 관리 →</a>
+    {% for v in calls %}<p>{{v.call_by}} <a href="{{ P }}/complexes/{{v.complex_id}}">{{v.complex.name}}</a> {{v.realtor_name}}</p>{% else %}<p class="muted">없음</p>{% endfor %}
+    <a class="small" href="{{ P }}/visits">임장 관리 →</a>
   </div>
 </div>
 {% endblock %}

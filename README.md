@@ -79,18 +79,21 @@ docker compose exec collector python -m collector.legal_dong --api   # 법정동
 | `DOCKER_USER`, `DOCKER_PASSWORD` | Docker Hub 로그인 (비밀번호 대신 Access Token 권장) |
 | `DOCKER_USERNAME` | 이미지 네임스페이스 |
 | `EC2_HOST`, `EC2_PORT`, `EC2_USERNAME`, `EC2_SSH_KEY` | NAS SSH 접속 정보 (time-page 와 같은 이름) |
-| `DATABASE_URL` | `mysql+pymysql://realty:<비밀번호>@host.docker.internal:3307/realty?charset=utf8mb4` (Synology MariaDB 10 기본 포트 3307) |
+| `DATABASE_URL` | `mysql+pymysql://realty:<비밀번호>@host.docker.internal:3326/realty?charset=utf8mb4` (포트는 NAS MariaDB 설정값. 이 NAS 는 3326 = time-page 와 동일) |
 | `SECRET_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ROUTINE_TOKEN` | 앱 비밀값 |
 | `MOLIT_SERVICE_KEY` | 공공데이터포털 인증키 |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `KAKAO_REST_KEY` | 선택 |
 
-**Variables**: `DEPLOY_DIR`(기본 `/var/services/homes/realty`), `PUBLIC_BASE_URL`(예: `https://realty.example.com`), `REALTY_PORT`(기본 8000)
+**Variables**: `DEPLOY_DIR`(예: `/var/services/homes/<SSH사용자>/realty`), `PUBLIC_BASE_URL`(예: `https://api.time-page.kr/realty`), `REALTY_PORT`(기본 8000)
+
+> `PUBLIC_BASE_URL` 에 경로가 있으면(`/realty`) 앱이 링크·리다이렉트·세션 쿠키 경로에 그 prefix 를 붙입니다.
+> 앞단 프록시는 prefix 를 **떼고** 넘겨야 합니다 (아래 time-page 연동 참고).
 
 > 비밀값은 `.env` 한 줄에 그대로 들어가므로 줄바꿈·공백·`#` 은 피하세요. DB 비밀번호에 `@ : / ?` 가 있으면 URL 인코딩이 필요합니다.
 
 ### NAS 1회 준비
 ```sql
--- Synology MariaDB 10 (phpMyAdmin 또는 mysql -P 3307)
+-- Synology MariaDB 10 (phpMyAdmin 또는 mysql -P 3326)
 CREATE DATABASE realty CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'realty'@'172.%' IDENTIFIED BY '<비밀번호>';   -- 도커 브리지 대역에서 접속
 GRANT ALL PRIVILEGES ON realty.* TO 'realty'@'172.%';
@@ -99,18 +102,30 @@ GRANT ALL PRIVILEGES ON realty.* TO 'realty'@'172.%';
 - SSH 사용자(`EC2_USERNAME`)가 `sudo` 없이 `docker` 를 실행할 수 있어야 함 (time-page 와 같은 계정을 쓰면 그대로 동작)
 - Docker Hub 이미지를 private 으로 두면 NAS 에서 한 번 `docker login` 필요
 - 첫 배포 후 한 번: `docker exec realty-collector python -m collector.legal_dong --api`
-- 리버스 프록시: `https://내도메인` → `http://localhost:8000`
+- 접속 경로: 아래 "time-page 와 443 공유" 참고
+
+### time-page 와 443 공유 (`https://api.time-page.kr/realty`)
+공유기는 443 만 열려 있고 Synology 리버스 프록시가 `api.time-page.kr` → `localhost:9080`(time-page-nginx)으로 보냅니다.
+time-page-api 저장소의 `deploy/blue.conf`·`green.conf` 에 `location /realty/ { proxy_pass http://172.17.0.1:8000/; ... }` 를
+추가해 두었고, time-page 를 한 번 배포하면(또는 conf 복사 후 `docker exec time-page-nginx nginx -s reload`) 적용됩니다.
+```
+인터넷 :443 → Synology 리버스 프록시 → :9080 time-page-nginx ─┬ /realty/ → 172.17.0.1:8000 realty-nginx → realty-blue|green
+                                                              └ /        → time-page blue|green
+```
+- 확인: `docker exec time-page-nginx curl -s http://172.17.0.1:8000/healthz` → `{"ok":true}`
+  (안 되면 `docker network inspect bridge` 의 Gateway 주소로 conf 를 바꾸세요)
+- Synology 리버스 프록시·인증서는 추가 작업이 없습니다.
 
 ## 3. Claude 예약 작업 (routine)
 1. 이 저장소를 **private GitHub 저장소**로 올립니다 (routine 에 저장소가 연결돼야 셸·curl 을 쓸 수 있음).
 2. claude.ai/code 의 클라우드 환경 설정에서
-   - Network access: **Limited** + Allowed domains 에 내 도메인 추가 (첫 실행에서 WebSearch 가 막히면 Full 로)
-   - **Network secret** 추가: 타입 Bearer, 호스트 = 내 도메인, 값 = `.env` 의 `ROUTINE_TOKEN`
+   - Network access: **Limited** + Allowed domains 에 `api.time-page.kr` 추가 (첫 실행에서 WebSearch 가 막히면 Full 로)
+   - **Network secret** 추가: 타입 Bearer, 호스트 = `api.time-page.kr`, 값 = `.env` 의 `ROUTINE_TOKEN`
      (프롬프트나 환경변수에 토큰을 넣지 마세요. 프록시가 Authorization 헤더를 붙여 줍니다.)
 3. Claude Code 에서 `/schedule` 로 routine 생성
    - 저장소: 위 저장소
    - 스케줄: `CRON_TZ=Asia/Seoul 7 7 * * *` (정각은 지연될 수 있어 07:07)
-   - 프롬프트: `scripts/claude_routine_prompt.md 를 읽고 그대로 수행해. SITE=https://내도메인`
+   - 프롬프트: `scripts/claude_routine_prompt.md 를 읽고 그대로 수행해. SITE=https://api.time-page.kr/realty`
 4. "Run now" 로 한 번 돌려 대시보드에 요약·뉴스가 들어오는지 확인합니다. routine 실행은 구독 사용량에서 차감됩니다.
 
 ## 주의할 점

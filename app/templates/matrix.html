@@ -3,7 +3,7 @@
   <h1>통합 우선순위 <span class="muted small">기준 {{date}} · 예산 {{br.price_lo|eok}}~{{br.price_hi|eok}}</span></h1>
   <div class="row">
     <a class="btn" href="?survivors={{0 if survivors else 1}}" style="background:var(--chip);color:var(--fg)">{{ '탈락 단지도 보기' if survivors else '살아남은 단지만' }}</a>
-    <a class="btn" href="/matrix/export.csv">CSV</a>
+    <a class="btn" href="{{ P }}/matrix/export.csv">CSV</a>
   </div>
 </div>
 <div class="card small muted">열 = 관심 지역(그룹), 행 = 가격대. 칸 옆 입력칸에 번호를 넣고 Enter 하면 우선순위가 저장됩니다. 탈락/남김은 단지 페이지에서 지정하세요. "정답은 없다 — 내 기준으로 순서를 매기는 단계"(PDF 3단계).</div>

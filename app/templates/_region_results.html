@@ -1,5 +1,5 @@
 {% for r in results %}
-<form method="post" action="/regions" class="row" style="padding:4px 0;border-bottom:1px solid var(--line)">
+<form method="post" action="{{ P }}/regions" class="row" style="padding:4px 0;border-bottom:1px solid var(--line)">
   <input type="hidden" name="code" value="{{r.code}}">
   <span style="min-width:280px">{{r.name}}</span>
   <span class="chip">{{ {'sido':'시도','sigungu':'시군구','dong':'읍면동'}[level_of(r.code)] }}</span>

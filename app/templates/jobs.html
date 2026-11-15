@@ -12,7 +12,7 @@
 <h2>매칭 안 된 실거래 단지 <span class="muted small">국토부 단지 ↔ 네이버 단지 수동 연결</span></h2>
 <table class="small"><tr><th>aptSeq</th><th>단지명</th><th>법정동</th><th>지번</th><th class="n">거래수</th><th>네이버 단지 ID(내부 번호)로 연결</th></tr>
 {% for seq,name,dong,jibun,cnt in unmatched %}<tr><td>{{seq}}</td><td>{{name}}</td><td>{{dong}}</td><td>{{jibun}}</td><td class="n">{{cnt}}</td>
-<td><form method="post" action="/match" class="row"><input type="hidden" name="apt_seq" value="{{seq}}"><input name="complex_id" placeholder="단지 페이지 URL의 숫자" size="10"><button class="mini">연결</button></form></td></tr>
+<td><form method="post" action="{{ P }}/match" class="row"><input type="hidden" name="apt_seq" value="{{seq}}"><input name="complex_id" placeholder="단지 페이지 URL의 숫자" size="10"><button class="mini">연결</button></form></td></tr>
 {% else %}<tr><td colspan="6" class="muted">없음</td></tr>{% endfor %}</table>
 </div>
 {% endblock %}
