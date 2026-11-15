@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>{% endblock %}
+{% block body %}
+<h1>지도 <span class="muted small">빨강 = 예산 범위 · 파랑 = 범위 밖 · 회색 = 탈락 · 숫자 = 우선순위</span></h1>
+<div id="map"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const pts={{points_json|safe}};
+const map=L.map('map');
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const b=[];
+pts.forEach(p=>{
+  const color=p.excluded?'#999':(p.in_budget?'#d93025':'#2457d6');
+  const m=L.circleMarker([p.lat,p.lng],{radius:p.priority?10:6,color,fillColor:color,fillOpacity:.7}).addTo(map);
+  const price=p.price?(p.price/10000).toFixed(2)+'억':'-';
+  m.bindPopup(`<b><a href="/complexes/${p.id}">${esc(p.name)}</a></b><br>${esc(p.region)} · ${p.year||'?'}년 · ${p.hh||'?'}세대<br>${p.area||''}㎡ ${price}<br>🚇 ${esc(p.station)} ${p.station_m&&p.station_m<9999?p.station_m+'m':''}`);
+  if(p.priority) m.bindTooltip(String(p.priority),{permanent:true,direction:'center',className:''});
+  b.push([p.lat,p.lng]);
+});
+if(b.length) map.fitBounds(b,{padding:[20,20]}); else map.setView([37.45,127.05],10);
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block body %}
+<h1>설정</h1>
+<form method="post" action="/settings">
+<div class="grid">
+<div class="card">
+  <h2>예산 (만원)</h2>
+  <p><label>목적 <select name="mode"><option value="live" {{'selected' if p.mode=='live'}}>실거주</option><option value="invest" {{'selected' if p.mode=='invest'}}>투자</option></select></label></p>
+  <p><label>현금 <input name="cash" value="{{p.cash}}" size="8"></label> <label>대출 <input name="loan" value="{{p.loan}}" size="8"></label></p>
+  <p><label>허용 오차 ± <input name="tolerance" value="{{p.tolerance}}" size="6"></label> <label>이사·법무사 등 <input name="extra_costs" value="{{p.extra_costs}}" size="5"></label></p>
+  <p><label>취득 후 주택 수 <input name="house_count_after" value="{{p.house_count_after}}" size="2"></label>
+     <label><input type="checkbox" name="first_home" {{'checked' if p.first_home}}> 생애최초</label>
+     <label><input type="checkbox" name="brokerage_vat" {{'checked' if p.brokerage_vat}}> 중개보수 VAT</label></p>
+  <p class="big">{{br.price_lo|eok}} ~ {{br.price_hi|eok}}</p>
+  <p class="small muted">총액 {{br.total|eok}} ± 오차 → 각 경계에서 '매매가 + 취득세 + 교육세 + 중개보수 + 기타'가 넘지 않는 최대 매매가</p>
+</div>
+<div class="card">
+  <h2>필터</h2>
+  <p><label>최소 세대수 <input name="min_households" value="{{p.min_households}}" size="5"></label></p>
+  <p><label>전용면적 <input name="area_min" value="{{p.area_min}}" size="4"> ~ <input name="area_max" value="{{p.area_max}}" size="4"> ㎡</label></p>
+  <h2>규제 (시군구/법정동코드 앞자리, 줄바꿈 구분)</h2>
+  <p class="small muted">정책이 자주 바뀌므로 직접 관리합니다. 예: 서울 전체 = 11, 성남 분당구 = 41135</p>
+  <label class="small">규제지역</label><textarea name="regulated_codes" rows="3">{{p.regulated_codes|join('\n')}}</textarea>
+  <label class="small">토지거래허가구역</label><textarea name="land_permit_codes" rows="3">{{p.land_permit_codes|join('\n')}}</textarea>
+</div>
+<div class="card">
+  <h2>대출 한도 추정 (A4)</h2>
+  <p><label>연소득 <input name="annual_income" value="{{p.annual_income}}" size="7"></label> <label>기타부채 연상환 <input name="other_debt_payment" value="{{p.other_debt_payment}}" size="6"></label></p>
+  <p><label>금리 <input name="loan_rate" value="{{p.loan_rate}}" size="4">%</label> <label>스트레스 가산 <input name="stress_rate" value="{{p.stress_rate}}" size="4">%</label> <label>기간 <input name="loan_years" value="{{p.loan_years}}" size="3">년</label></p>
+  <p><label>DSR <input name="dsr_limit" value="{{p.dsr_limit}}" size="4">%</label> <label>LTV <input name="ltv_pct" value="{{p.ltv_pct}}" size="4">%</label> <label>규제지역 LTV <input name="ltv_pct_regulated" value="{{p.ltv_pct_regulated}}" size="4">%</label></p>
+  <p><label>한도 상한 <input name="loan_cap" value="{{p.loan_cap}}" size="7"> (0=없음)</label></p>
+  {% if loan %}<p>예산 상단 {{br.price_hi|eok}} 기준: LTV {{loan.by_ltv|eok}} · DSR {{loan.by_dsr|eok}} → <b>{{loan.limit|eok}}</b> ({{loan.binding}})
+     {% if loan.limit < p.loan %}<br><span class="Bad">입력한 대출 {{p.loan|eok}} 보다 적습니다</span>{% endif %}</p>{% endif %}
+</div>
+<div class="card">
+  <h2>인테리어 비용표 (만원, [24평, 32평])</h2>
+  <p><label>계수 × <input name="interior_coef" value="{{p.interior_coef}}" size="4"></label> <span class="small muted">PDF: "지금은 ×1.2 정도"</span></p>
+  <textarea name="interior_table" rows="14" style="font-family:monospace;font-size:12px">{{table_json}}</textarea>
+</div>
+</div>
+<button>저장</button>
+</form>
+{% endblock %}

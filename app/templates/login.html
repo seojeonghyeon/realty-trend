@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block body %}
+<div class="card" style="max-width:360px;margin:60px auto">
+<h1>로그인</h1>
+{% if error %}<p class="Bad">{{error}}</p>{% endif %}
+<form method="post" action="/login">
+<input type="hidden" name="next" value="{{next}}">
+<p><input name="username" placeholder="아이디" autocomplete="username" required style="width:100%"></p>
+<p><input name="password" type="password" placeholder="비밀번호" autocomplete="current-password" required style="width:100%"></p>
+<button style="width:100%">로그인</button>
+</form></div>
+{% endblock %}

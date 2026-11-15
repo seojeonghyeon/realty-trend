@@ -1,0 +1,9 @@
+# 컨테이너 TZ=Asia/Seoul 기준
+# 01:30 과거 실거래 백필 (국토부 호출 한도 안에서 조금씩)
+30 1 * * * cd /app && python -m collector.backfill --reserve 600
+# 04:00 DB 백업 (14일 보관)
+0 4 * * * cd /app && python scripts/backup.py
+# 04:30 일일 수집 — 네이버 요청이 많으면 1~2시간 걸리므로 07시 Claude routine 전에 끝나도록 일찍 시작
+30 4 * * * cd /app && python -m collector.run_daily
+# 매월 1일 03:00 법정동코드 갱신 (행정구역 개편 대비)
+0 3 1 * * cd /app && python -m collector.legal_dong --api

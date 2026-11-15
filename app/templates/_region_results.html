@@ -1,0 +1,9 @@
+{% for r in results %}
+<form method="post" action="/regions" class="row" style="padding:4px 0;border-bottom:1px solid var(--line)">
+  <input type="hidden" name="code" value="{{r.code}}">
+  <span style="min-width:280px">{{r.name}}</span>
+  <span class="chip">{{ {'sido':'시도','sigungu':'시군구','dong':'읍면동'}[level_of(r.code)] }}</span>
+  <input name="group_label" placeholder="그룹명(선택)" style="width:140px">
+  <button class="mini">추가</button>
+</form>
+{% else %}<p class="muted small">검색 결과 없음 (2글자 이상)</p>{% endfor %}

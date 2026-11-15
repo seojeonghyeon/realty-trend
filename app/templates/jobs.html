@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block body %}
+<h1>수집 기록</h1>
+<div class="card scroll"><table class="small">
+<tr><th>작업</th><th>기준일</th><th>시작</th><th>종료</th><th>상태</th><th>통계</th><th>로그</th></tr>
+{% for j in jobs %}<tr>
+<td>{{j.job}}</td><td>{{j.run_date}}</td><td>{{j.started_at.strftime('%m-%d %H:%M') if j.started_at}}</td><td>{{j.finished_at.strftime('%H:%M') if j.finished_at else ''}}</td>
+<td><span class="{{'Good' if j.status=='ok' else ('Soso' if j.status in ('partial','running') else 'Bad')}}">{{j.status}}</span></td>
+<td><code>{{j.stats|tojson}}</code></td><td><details><summary>보기</summary><pre style="white-space:pre-wrap;max-width:600px">{{j.log}}</pre></details></td>
+</tr>{% else %}<tr><td colspan="7" class="muted">기록 없음</td></tr>{% endfor %}
+</table></div>
+<div class="card">
+<h2>매칭 안 된 실거래 단지 <span class="muted small">국토부 단지 ↔ 네이버 단지 수동 연결</span></h2>
+<table class="small"><tr><th>aptSeq</th><th>단지명</th><th>법정동</th><th>지번</th><th class="n">거래수</th><th>네이버 단지 ID(내부 번호)로 연결</th></tr>
+{% for seq,name,dong,jibun,cnt in unmatched %}<tr><td>{{seq}}</td><td>{{name}}</td><td>{{dong}}</td><td>{{jibun}}</td><td class="n">{{cnt}}</td>
+<td><form method="post" action="/match" class="row"><input type="hidden" name="apt_seq" value="{{seq}}"><input name="complex_id" placeholder="단지 페이지 URL의 숫자" size="10"><button class="mini">연결</button></form></td></tr>
+{% else %}<tr><td colspan="6" class="muted">없음</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% block title %}{{region.label}} · 부동산 동향{% endblock %}{% block body %}
+<div class="row" style="justify-content:space-between">
+  <h1>{{region.label}} <span class="muted small">{{region.display_name}} · 기준 {{date}}</span></h1>
+  <div class="row">
+    {% if regulated %}<span class="chip warn">규제지역</span>{% endif %}
+    {% if land_permit %}<span class="chip warn">토지거래허가구역{% if mode=='invest' %} — 실거주 의무, 갭투자 불가{% endif %}</span>{% endif %}
+    <span class="chip">평단가 {{(pyeong_price or 0)|num}}만</span>
+    <span class="chip">예산 {{br.price_lo|eok}}~{{br.price_hi|eok}}</span>
+    <a class="btn" href="/regions/{{region.id}}/export.csv">CSV</a>
+  </div>
+</div>
+<div class="tabs row card" style="padding:6px">
+  <a href="?view=matrix&below={{below}}" class="{{'on' if view=='matrix'}}">가격대 × 동 매트릭스</a>
+  <a href="?view=table" class="{{'on' if view=='table'}}">전수조사 표</a>
+  <a href="?view=analysis" class="{{'on' if view=='analysis'}}">Claude 동향 분석</a>
+</div>
+
+{% if view=='matrix' %}
+<div class="card">
+  <form class="row small" method="get"><input type="hidden" name="view" value="matrix">
+    예산 하단 아래로 <input name="below" value="{{below}}" size="3">억까지 표시 <button class="mini">적용</button>
+    <span class="muted">빨간 줄 = 예산 범위 · 취소선 = 탈락 · 굵게 = 남길 단지 · 표기: 단지명(연식^/전용㎡/가격억)</span>
+  </form>
+</div>
+<div class="card">{% with quick=False %}{% include "_matrix.html" %}{% endwith %}</div>
+
+{% elif view=='table' %}
+<div class="card scroll"><table class="small">
+<tr><th>동</th><th>단지명</th><th class="n">연식</th><th class="n">세대수</th><th class="n">공급㎡</th><th class="n">전용㎡</th><th>타입</th><th class="n">유닛세대</th><th class="n">방/욕</th><th>구조</th>
+<th class="n">전고점</th><th class="n">매매(호가)</th><th class="n">전일비</th><th class="n">최근실거래</th><th class="n">전세가</th><th class="n">투자금</th><th class="n">전세가율</th><th class="n">전고대비</th><th class="n">평단가</th><th class="n">매물</th><th>평가</th></tr>
+{% for r in rows %}{% set ev = evals.get(r.complex_id) %}
+<tr style="{{'background:var(--budget)' if br.contains(r.price) else ''}}{{';opacity:.5' if ev and ev.excluded else ''}}">
+  <td>{{r.dong}}</td><td><a href="/complexes/{{r.complex_id}}">{{r.name}}</a></td>
+  <td class="n">{{r.built_year or '-'}}</td><td class="n">{{r.households|num}}</td><td class="n">{{'%.1f'|format(r.supply_m2) if r.supply_m2 else '-'}}</td><td class="n">{{'%.2f'|format(r.exclusive_m2)}}</td>
+  <td>{{r.area_name}}</td><td class="n">{{r.type_households|num}}</td><td class="n">{{r.rooms or '-'}}/{{r.baths or '-'}}</td><td>{{r.entrance}}</td>
+  <td class="n" title="{{r.peak_date or ''}}">{{r.peak|num}}</td><td class="n"><b>{{r.ask_min|num}}</b></td>
+  <td class="n {{'down' if (r.ask_change or 0)<0 else ('up' if (r.ask_change or 0)>0 else '')}}">{{ r.ask_change|num if r.ask_change else '' }}</td>
+  <td class="n" title="{{r.last_trade_date or ''}}">{{r.last_trade|num}}</td><td class="n" title="{{r.jeonse_src}}">{{r.jeonse|num}}</td>
+  <td class="n">{{r.invest|num}}</td><td class="n">{{r.jeonse_ratio|pct}}</td><td class="n">{{r.vs_peak|pct(1)}}</td><td class="n">{{r.pyeong_price|num}}</td><td class="n">{{r.listing_cnt}}</td>
+  <td class="small">{% if ev %}{% for k,l in [('transport','교'),('homogeneity','균'),('school','학'),('households','세')] %}{% if ev[k] %}<span class="{{ev[k]}}">{{l}}</span>{% endif %}{% endfor %}{% if ev.excluded %} <span class="chip">탈락 {{ev.exclude_reason}}</span>{% endif %}{% endif %}</td>
+</tr>
+{% else %}<tr><td colspan="21" class="muted">데이터 없음</td></tr>{% endfor %}
+</table></div>
+<p class="small muted">금액 단위: 만원 · 매매가는 중복 제거한 호가 최저(없으면 최근 실거래) · 전세가는 전세 호가 최저(없으면 6개월 실거래 평균) · 투자금 = 매매 − 전세 · 전고대비 = (매매 − 전고점) / 전고점</p>
+
+{% else %}
+{% for a in analysis %}<div class="card"><h2>{{a.date}}</h2>
+  {% if a.highlights %}<p>{% for h in a.highlights %}<span class="chip">{{h}}</span>{% endfor %}</p>{% endif %}
+  <div class="md" data-md="{{a.markdown}}"></div></div>
+{% else %}<div class="card muted">아직 분석이 없습니다.</div>{% endfor %}
+{% endif %}
+{% endblock %}

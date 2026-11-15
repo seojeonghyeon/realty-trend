@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}
+<h1>금융·부동산 뉴스 <span class="muted small">{{date}}</span></h1>
+<div class="card row small">{% for d in dates %}<a class="chip" style="{{'font-weight:700' if d==date}}" href="?date={{d}}">{{d}}</a>{% endfor %}</div>
+{% if summary %}<div class="card"><h2>Claude 종합 분석</h2><div class="md" data-md="{{summary.markdown}}"></div></div>{% endif %}
+<div class="card">
+{% for n in items %}
+<div style="padding:8px 0;border-bottom:1px solid var(--line)">
+  <span class="chip">{{n.impact}}</span> <span class="{{'Good' if n.sentiment=='호재' else ('Bad' if n.sentiment=='악재' else 'muted')}} small">{{n.sentiment}}</span>
+  <a href="{{n.url}}" target="_blank" rel="noopener"><b>{{n.title}}</b></a> <span class="muted small">{{n.source}} {{n.published}}</span>
+  <p class="small">{{n.summary}}</p>
+</div>
+{% else %}<p class="muted">뉴스 없음</p>{% endfor %}
+</div>
+{% endblock %}

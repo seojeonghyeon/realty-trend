@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block body %}
+<h1>임장·통화 관리</h1>
+<div class="card small muted">토요일에 볼 거면 늦어도 목요일부터 전화 (금요일엔 예약이 잘 안 될 수 있음). 같은 사장님 매물을 타입별·향별로 함께 예약 요청. 매물 볼 때 수리비를 실시간 계산.</div>
+{% for v in visits %}
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2><a href="/complexes/{{v.complex_id}}">{{v.complex.name}}</a> {% if v.listing %}<span class="muted small">{{v.listing.building}} {{v.listing.floor_text}} {{v.listing.price|eok}}</span>{% endif %}</h2>
+    <span class="chip">{{ {'todo':'예정','called':'통화함','visited':'임장 완료','drop':'제외'}[v.status] }}</span>
+  </div>
+  <p>📞 전화할 날 <b>{{v.call_by or '-'}}</b> · 방문 {{v.visit_at or '-'}} · {{v.realtor_name}} {{v.realtor_phone}}</p>
+  <details><summary class="small">통화 스크립트</summary><p class="small" style="font-style:italic">“{{script(v.listing, v.complex, v.visit_at)}}”</p></details>
+  <form method="post" action="/visits/{{v.id}}/save">
+    <div class="row small">
+      <select name="status">{% for s,l in [('todo','예정'),('called','통화함'),('visited','임장 완료'),('drop','제외')] %}<option value="{{s}}" {{'selected' if v.status==s}}>{{l}}</option>{% endfor %}</select>
+      <input name="realtor_phone" value="{{v.realtor_phone}}" placeholder="전화">
+      <input type="datetime-local" name="visit_at" value="{{v.visit_at.strftime('%Y-%m-%dT%H:%M') if v.visit_at else ''}}">
+    </div>
+    <p class="small"><b>하자/수리 체크</b><br>{% for item in CHECKLIST %}<label style="margin-right:10px"><input name="chk_{{loop.index0}}" value="{{v.checklist.get(item,'')}}" placeholder="{{item}}" style="width:150px" title="{{item}}"></label>{% endfor %}</p>
+    <p><textarea name="memo" rows="2" placeholder="메모">{{v.memo}}</textarea></p>
+    <button class="mini">저장</button>
+  </form>
+</div>
+{% else %}<div class="card muted">임장 기록이 없습니다. 단지/매물 페이지에서 "임장 추가"를 누르세요.</div>{% endfor %}
+{% endblock %}

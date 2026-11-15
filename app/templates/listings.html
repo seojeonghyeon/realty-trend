@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block body %}
+<h1>매물 모아보기 <span class="muted small">기준 {{date}} · 중복 묶음 대표만</span></h1>
+<div class="card row small">
+  {% for s,l in [('budget','예산 범위'),('keep','남길/우선순위 단지'),('all','전체')] %}<a class="chip" style="{{'font-weight:700' if scope==s}}" href="?scope={{s}}&new={{new}}&hide_flagged={{hide_flagged}}">{{l}}</a>{% endfor %}
+  <a class="chip" style="{{'font-weight:700' if new}}" href="?scope={{scope}}&new={{0 if new else 1}}&hide_flagged={{hide_flagged}}">오늘 신규만</a>
+  <a class="chip" style="{{'font-weight:700' if hide_flagged}}" href="?scope={{scope}}&new={{new}}&hide_flagged={{0 if hide_flagged else 1}}">의심 매물 숨기기</a>
+  <span class="muted">예산 {{br.price_lo|eok}}~{{br.price_hi|eok}} · 탈락 단지 제외</span>
+</div>
+<div class="card scroll"><table class="small">
+<tr><th>단지</th><th>동/층</th><th>타입</th><th>향</th><th class="n">가격</th><th>수리</th><th class="n">인테리어</th><th>확인일</th><th>주의</th><th>설명</th></tr>
+{% for li, est in rows %}
+<tr>
+  <td><a href="/complexes/{{li.complex_id}}">{{li.complex.name}}</a>{% if li.first_seen==date %} <span class="chip">NEW</span>{% endif %}</td>
+  <td>{{li.building}} {{li.floor_text}}</td><td>{{li.area_group}}㎡ {{li.area_name}}</td><td>{{li.direction}}</td>
+  <td class="n"><a href="{{article_url(li.article_no)}}" target="_blank" rel="noopener"><b>{{li.price|eok}}</b></a>{% if li.prev_price %}<br><span class="{{'down' if li.price<li.prev_price else 'up'}}">{{li.prev_price|eok}}→</span>{% endif %}</td>
+  <td>{{li.repair_grade or '모름'}}</td><td class="n">{{est.total|num}}</td><td>{{li.confirmed_at or ''}}</td>
+  <td>{% for f in li.flags %}<span class="chip warn">{{f}}</span>{% endfor %}{% if li.dup_count>1 %}<span class="chip">중복 {{li.dup_count}}</span>{% endif %}</td>
+  <td style="max-width:360px">{{li.description[:120]}}</td>
+</tr>
+{% else %}<tr><td colspan="10" class="muted">조건에 맞는 매물 없음</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

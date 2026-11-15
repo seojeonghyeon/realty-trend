@@ -1,0 +1,50 @@
+# Synology Container Manager → 프로젝트 → 이 파일로 생성
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: realty
+      MARIADB_USER: realty
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--innodb-buffer-pool-size=256M"]
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # 외부에 포트를 열지 않는다 (compose 내부망에서만 접근)
+
+  app:
+    build: .
+    image: realty-trend:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql+pymysql://realty:${MARIADB_PASSWORD}@db:3306/realty?charset=utf8mb4
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"   # Synology 리버스 프록시(HTTPS) 또는 Cloudflare Tunnel 이 이 포트를 바라보게
+    mem_limit: 512m
+
+  collector:
+    image: realty-trend:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql+pymysql://realty:${MARIADB_PASSWORD}@db:3306/realty?charset=utf8mb4
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    command: ["supercronic", "-passthrough-logs", "/app/scripts/crontab"]
+    volumes:
+      - ./backup:/backup
+    mem_limit: 512m
