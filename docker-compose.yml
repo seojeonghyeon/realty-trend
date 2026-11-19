@@ -48,3 +48,4 @@ services:
     volumes:
       - ./backup:/backup
     mem_limit: 512m
+
