@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 COMPOSE="docker compose -p realty -f ./docker-compose.yml --env-file ./.env"
 NGINX=realty-nginx
+mkdir -p ../backup   # collector 의 백업 bind mount 대상 (없으면 컨테이너가 뜨지 않음)
 
 # 1. 현재 활성 색 확인 → 반대 색에 배포
 CURRENT=""

@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.models import ApiQuota
 
 log = logging.getLogger("collector")
+# httpx 는 INFO 로 요청 URL 전체를 찍어 국토부 ServiceKey 가 로그에 남는다 → 경고 이상만
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 class QuotaExceeded(RuntimeError):

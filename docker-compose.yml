@@ -44,7 +44,7 @@ services:
         condition: service_healthy
       app:
         condition: service_started
-    command: ["supercronic", "-passthrough-logs", "/app/scripts/crontab"]
+    command: ["/usr/local/bin/supercronic", "-passthrough-logs", "/app/scripts/crontab"]
     volumes:
       - ./backup:/backup
     mem_limit: 512m

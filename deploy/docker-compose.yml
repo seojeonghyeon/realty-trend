@@ -25,7 +25,7 @@ services:
   collector:
     <<: *app
     container_name: realty-collector
-    command: ["supercronic", "-passthrough-logs", "/app/scripts/crontab"]
+    command: ["/usr/local/bin/supercronic", "-passthrough-logs", "/app/scripts/crontab"]
     volumes:
       - ../backup:/backup
 
