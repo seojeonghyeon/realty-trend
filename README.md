@@ -58,8 +58,18 @@ docker compose exec collector python -m collector.legal_dong --api   # 법정동
    ```
 3. "수집" 메뉴에서 상태·오류 확인, 매칭 안 된 단지는 수동 연결
 
-## 2-1. GitHub Actions 자동 배포 (time-page-api 와 같은 방식)
-`master`/`main` 에 푸시하면 `.github/workflows/deploy.yml` 이 실행됩니다.
+## 2-0. Mac 에서 직접 배포 (현재 기본)
+GitHub Actions 를 쓸 수 없을 때 `scripts/deploy_manual.sh` 가 아래 2-1 과 같은 일을 합니다.
+```bash
+cp .deploy.env.example .deploy.env   # 처음 한 번 (NAS 주소·계정·Docker Hub ID)
+docker login                         # 처음 한 번, Docker Desktop 실행 상태에서
+./scripts/deploy_manual.sh           # 테스트 → 빌드/푸시 → deploy/ 전송 → NAS 의 .env APP_VERSION 갱신 → deploy.sh
+```
+- NAS 의 `$NAS_DIR/deploy/.env`(비밀값)는 처음에 직접 만들어 두고, 스크립트는 `APP_VERSION` 만 바꿉니다.
+- 커밋 안 된 변경이 있으면 태그에 `-dirty-<시각>` 이 붙습니다.
+
+## 2-1. GitHub Actions 배포 (현재 수동 실행만, time-page-api 와 같은 방식)
+Actions 탭에서 Run workflow 로 `.github/workflows/deploy.yml` 을 실행합니다 (push 자동 실행은 꺼 둠).
 
 1. **build-and-push**: pytest → Docker 이미지 빌드 → Docker Hub 푸시 (`<DOCKER_USERNAME>/realty-trend:<VERSION>-<sha7>`, `latest`)
 2. **copy-files**: `deploy/` 의 compose·nginx·스크립트를 NAS 의 `DEPLOY_DIR` 로 scp

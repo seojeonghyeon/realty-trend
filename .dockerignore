@@ -8,3 +8,4 @@ data/mysql
 backup
 tests
 *.pdf
+.deploy.env

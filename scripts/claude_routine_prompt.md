@@ -12,15 +12,27 @@
 - 이 저장소의 파일을 수정하거나 커밋/푸시하지 마세요. 작업 파일은 `/tmp/routine/` 에만 만드세요.
 - 분석은 "매수 추천"이 아니라 사용자의 판단을 돕는 정리입니다. 단정적인 매수/매도 권유 문구를 쓰지 마세요.
 
-## 1. 데이터 받기
+## 1. 사전 점검과 데이터 받기
+모든 bash 블록은 같은 셸에서 이어서 실행하거나, 매번 맨 앞에서 `SITE` 를 다시 지정하세요.
 ```bash
+SITE="https://api.time-page.kr/realty"   # routine 프롬프트의 SITE 값으로 바꾸기 (끝에 / 없이)
+SITE="${SITE%/}"
 mkdir -p /tmp/routine && cd /tmp/routine
+curl -sS -o health.txt -w "health=%{http_code}\n" "$SITE/api/v1/health"; cat health.txt; echo
+```
+- `health=200` 이고 본문이 `{"ok":true}` 이면 진행합니다.
+- `401`/`403` → network secret(Bearer, 호스트) 설정 문제. `404` 이거나 HTML 이 오면 SITE 주소(`/realty` prefix) 문제. 어느 쪽이든 **즉시 중단하고 그 사실만 보고**하세요.
+
+```bash
 curl -sS --fail-with-body "$SITE/api/v1/digest" -o digest.json; echo "exit=$?"
-python3 -c "import json;d=json.load(open('digest.json'));print(d['status'], d.get('date'))"
+python3 -c "import json;d=json.load(open('digest.json'));print(d['status'], d.get('date'), (d.get('job') or {}).get('status') if isinstance(d.get('job'),dict) else d.get('job'), len(d.get('regions',[])))"
 ```
 - `status == "not_ready"` 이면 `sleep 540` 후 한 번 더 받습니다.
 - 그래도 준비되지 않았으면 **2~4단계는 건너뛰고** 5단계(뉴스)만 하고, 6단계 요약에 "오늘 수집이 지연되어 매물 분석 없음"이라고 적습니다.
-- HTTP 401/403 이면 network secret 설정 문제입니다. 즉시 중단하고 그 사실만 보고하세요.
+- 이후 **모든 POST 의 날짜는 `digest.date`** 를 씁니다 (not_ready 로 뉴스만 할 때도 그 응답의 `date`).
+- 관심 지역이 없거나(`regions == []`) 모든 지역의 `candidates` 가 비어 있으면 2~4단계는 건너뛰고,
+  6단계 요약에 "관심 지역 또는 예산 설정이 필요합니다(설정 메뉴)"라고 적습니다.
+- `job.status == "failed"` 이거나 `job.errors` 가 있으면 6단계 "오늘 체크할 것"에 수집 오류를 요약해 적습니다.
 
 digest 구조 요약:
 - `budget`: 예산 필터 범위(`price_lo`~`price_hi`), 현금/대출, 모드(live=실거주, invest=투자)
@@ -54,7 +66,7 @@ PDF 방식의 4가지 기준을 Good/Soso/Bad 로 매깁니다. `complexes_needi
 {"items":[{"complex_id":12,"transport":"Soso","homogeneity":"Good","school":"Bad","households":"Good","suggest_exclude":false,"exclude_reason":"","priority_suggestion":null,"note":"..."}]}
 ```
 
-## 4. 지역별 동향 분석 → `POST /api/v1/analysis` (region_id = 각 지역 id)
+## 4. 지역별 동향 분석 → 6단계와 함께 `POST /api/v1/analysis` (region_id = 각 지역 id)
 지역마다 마크다운 5~12줄:
 - 예산 범위 안 단지 수, 호가 인하/인상 단지, 신규 매물, 사라진 매물(전일 대비 매물 수 감소)
 - 가격대 × 동 관점에서 눈에 띄는 단지 (PDF 표기 `단지명(연식^/전용/가격억)` 사용)
@@ -91,6 +103,14 @@ WebSearch 로 **어제와 오늘(digest.date 기준, KST)** 기사만 찾습니�
 - 전화해볼 매물, 확인이 필요한 의심 매물, 평가가 필요한 단지
 ```
 `highlights` 에 3개 이내 핵심 문구.
+
+4단계 지역 분석과 6단계 요약은 **한 번의 POST** 로 보냅니다 (`date` 필수, region_id 는 digest 의 `regions[].id`, 요약은 0):
+```json
+{"date":"2026-11-14","items":[
+  {"region_id":0,"markdown":"**한 줄 요약**: ...","highlights":["..."]},
+  {"region_id":3,"markdown":"- 예산 범위 단지 5곳 ...","highlights":["..."]}
+]}
+```
 
 ## 7. 업로드와 검증
 각 POST 는 JSON 파일로 만들어 보냅니다.

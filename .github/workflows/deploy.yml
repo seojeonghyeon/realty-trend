@@ -1,8 +1,10 @@
-name: master branch auto ci/cd (realty-trend)
+name: realty-trend deploy (manual)
 
+# GitHub 계정 결제 문제로 Actions 가 막혀 있어 push 자동 실행을 끔. 평소에는 scripts/deploy_manual.sh 로 배포.
+# 풀리면 아래 push 트리거를 다시 켜면 된다.
 on:
-  push:
-    branches: [master, main]
+  # push:
+  #   branches: [master, main]
   workflow_dispatch:
 
 concurrency:

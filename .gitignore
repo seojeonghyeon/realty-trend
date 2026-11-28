@@ -8,3 +8,4 @@ backup/
 .DS_Store
 TalkFile_*.pdf
 .idea/
+.deploy.env
